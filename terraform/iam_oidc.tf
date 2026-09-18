@@ -43,7 +43,7 @@ resource "aws_iam_role" "github_actions" {
   assume_role_policy = data.aws_iam_policy_document.github_actions_assume_role.json
 }
 
-# Politica de Minimo Privilegio para despliegue de Lambda, Layer y S3
+# Politica de Minimo Privilegio para despliegue de Lambda, Layer, S3 y API Gateway
 data "aws_iam_policy_document" "github_actions_permissions" {
   # Permisos para gestionar la Lambda Layer
   statement {
@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
   }
 
-  # Permisos para gestionar la Funcion Lambda
+  # Permisos para gestionar las Funciones Lambda (motor-aws y motor-aws-authorizer)
   statement {
     sid    = "LambdaFunctionManagement"
     effect = "Allow"
@@ -72,14 +72,21 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "lambda:GetFunctionConfiguration",
       "lambda:GetFunctionCodeSigningConfig",
       "lambda:ListVersionsByFunction",
-      "lambda:DeleteFunction"
+      "lambda:DeleteFunction",
+      "lambda:GetFunctionUrlConfig",
+      "lambda:CreateFunctionUrlConfig",
+      "lambda:UpdateFunctionUrlConfig",
+      "lambda:DeleteFunctionUrlConfig",
+      "lambda:AddPermission",
+      "lambda:RemovePermission",
+      "lambda:GetPolicy"
     ]
     resources = [
-      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.function_name}"
+      "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.function_name}*"
     ]
   }
 
-  # Permisos para pasar el rol de ejecucion a la Lambda
+  # Permisos para pasar los roles de ejecucion a las Lambdas
   statement {
     sid    = "PassRoleToLambda"
     effect = "Allow"
@@ -87,11 +94,12 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "iam:PassRole"
     ]
     resources = [
-      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-exec-role"
+      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-exec-role",
+      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-authorizer-exec-role"
     ]
   }
 
-  # Permisos para gestionar recursos de IAM asociados a la Lambda
+  # Permisos para gestionar recursos de IAM asociados a las Lambdas
   statement {
     sid    = "IAMRoleReadManagement"
     effect = "Allow"
@@ -101,12 +109,17 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "iam:ListRolePolicies",
       "iam:ListAttachedRolePolicies",
       "iam:CreateRole",
+      "iam:DeleteRole",
       "iam:PutRolePolicy",
+      "iam:DeleteRolePolicy",
       "iam:AttachRolePolicy",
-      "iam:DetachRolePolicy"
+      "iam:DetachRolePolicy",
+      "iam:TagRole",
+      "iam:ListInstanceProfilesForRole"
     ]
     resources = [
-      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-exec-role"
+      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-exec-role",
+      "arn:aws:iam::${var.aws_account_id}:role/${var.function_name}-authorizer-exec-role"
     ]
   }
 
@@ -147,6 +160,51 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
     resources = [
       "arn:aws:s3:::*"
+    ]
+  }
+
+  # Permisos sobre el bucket de Terraform state
+  statement {
+    sid    = "TerraformStateAccess"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "arn:aws:s3:::motor-aws-tfstate-${var.aws_account_id}",
+      "arn:aws:s3:::motor-aws-tfstate-${var.aws_account_id}/*"
+    ]
+  }
+
+  # Permisos para el lock del state en DynamoDB
+  statement {
+    sid    = "TerraformStateLock"
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/motor-aws-tfstate-locks"
+    ]
+  }
+
+  # Permisos para gestionar el API Gateway (HTTP API, rutas, integraciones, stage, authorizer)
+  statement {
+    sid    = "ApiGatewayManagement"
+    effect = "Allow"
+    actions = [
+      "apigateway:GET",
+      "apigateway:POST",
+      "apigateway:PUT",
+      "apigateway:PATCH",
+      "apigateway:DELETE"
+    ]
+    resources = [
+      "arn:aws:apigateway:${var.aws_region}::/apis*"
     ]
   }
 }
