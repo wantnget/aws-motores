@@ -63,7 +63,7 @@ jobs:
           echo "Ejecutando invocacion de prueba (GET /validate)..."
           API_URL=$(terraform -chdir=terraform output -raw api_gateway_url)
 
-          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" "$API_URL/validate")
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" -H "x-api-key: ${{ secrets.AUTHORIZER_API_KEY }}" "$API_URL/validate")
 
           echo "Respuesta de la API:"
           cat response.json
