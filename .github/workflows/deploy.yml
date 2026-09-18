@@ -25,8 +25,7 @@ jobs:
 
       - name: 2. Compilar dependencias de la Layer en Docker
         run: |
-          chmod +x layer/build.sh
-          ./layer/build.sh
+          bash layer/build.sh
 
       - name: 3. Validar existencia del artefacto layer.zip
         run: |

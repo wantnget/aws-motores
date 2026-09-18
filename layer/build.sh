@@ -1,7 +1,7 @@
-﻿#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"" ; pwd)"
 cd "$DIR"
 
 echo "==> [1/2] Construyendo imagen Docker para Lambda Layer..."
