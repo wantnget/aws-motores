@@ -139,44 +139,30 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
   }
 
-  # Permisos sobre S3 para los archivos y el almacenamiento de la funcion
+  # Permisos completos sobre el bucket de la app y el bucket del state (evita ir agregando accion por accion)
   statement {
-    sid    = "S3StorageManagement"
+    sid    = "S3FullAccessOwnBuckets"
     effect = "Allow"
     actions = [
-      "s3:CreateBucket",
-      "s3:GetBucketLocation",
-      "s3:GetBucketAcl",
-      "s3:ListBucket",
-      "s3:GetBucketPolicy",
-      "s3:PutBucketPolicy",
-      "s3:PutBucketVersioning",
-      "s3:GetBucketVersioning",
-      "s3:PutEncryptionConfiguration",
-      "s3:GetEncryptionConfiguration",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:GetObject",
-      "s3:PutObject"
+      "s3:*"
     ]
     resources = [
-      "arn:aws:s3:::*"
-    ]
-  }
-
-  # Permisos sobre el bucket de Terraform state
-  statement {
-    sid    = "TerraformStateAccess"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:ListBucket"
-    ]
-    resources = [
+      "arn:aws:s3:::${var.function_name}-storage-${var.aws_account_id}",
+      "arn:aws:s3:::${var.function_name}-storage-${var.aws_account_id}/*",
       "arn:aws:s3:::motor-aws-tfstate-${var.aws_account_id}",
       "arn:aws:s3:::motor-aws-tfstate-${var.aws_account_id}/*"
     ]
+  }
+
+  # Permiso para listar/crear buckets (accion a nivel de cuenta, no de bucket especifico)
+  statement {
+    sid    = "S3AccountLevel"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:ListAllMyBuckets"
+    ]
+    resources = ["*"]
   }
 
   # Permisos para el lock del state en DynamoDB
