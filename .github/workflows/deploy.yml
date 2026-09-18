@@ -1,0 +1,35 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write   # requerido para OIDC
+  contents: read
+
+env:
+  FUNCTION_NAME: motor-aws
+  AWS_REGION: us-east-2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::532918216426:role/github-actions-motor-aws-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Empaquetar código
+        run: zip -j function.zip lambda_function.py
+
+      - name: Desplegar a Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --zip-file fileb://function.zip
