@@ -10,3 +10,4 @@ github_repo      = "wantnget/aws-motores"
 create_oidc_provider = false  # Cambiar a true si el OIDC Provider de GitHub aun no existe en tu cuenta
 create_oidc_role     = true   # Cambiar a false si ya tienes creado el rol en IAM
 oidc_role_name       = "github-actions-motor-aws-deploy"
+authorizer_api_key = "pon-aqui-una-clave-larga-y-aleatoria"

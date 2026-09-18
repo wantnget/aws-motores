@@ -13,6 +13,7 @@ env:
   AWS_REGION: "us-east-2"
   ROLE_TO_ASSUME: "arn:aws:iam::532918216426:role/github-actions-motor-aws-deploy"
   TF_VERSION: "1.8.5"
+  TF_VAR_authorizer_api_key: ${{ secrets.AUTHORIZER_API_KEY }}
 
 jobs:
   build-and-deploy:

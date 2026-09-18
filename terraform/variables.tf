@@ -51,3 +51,8 @@ variable "create_oidc_role" {
   type        = bool
   default     = false
 }
+variable "authorizer_api_key" {
+  description = "API Key esperada por el Lambda Authorizer"
+  type        = string
+  sensitive   = true
+}

@@ -31,3 +31,7 @@ output "lambda_function_url" {
   description = "URL HTTPS publica para invocar la Lambda directamente"
   value       = aws_lambda_function_url.motor_aws_url.function_url
 }
+output "api_gateway_url" {
+  description = "URL base del API Gateway"
+  value       = aws_apigatewayv2_api.motor_aws_api.api_endpoint
+}

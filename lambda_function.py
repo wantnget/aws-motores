@@ -3,55 +3,62 @@ import boto3
 import base64
 import os
 import requests  # Importado desde la Lambda Layer
+from flask import Flask, request
+import awsgi
+
+app = Flask(__name__)
 
 s3 = boto3.client('s3')
 BUCKET_NAME = os.environ.get('BUCKET_NAME', 'nombre-de-tu-bucket')
 
 
-def lambda_handler(event, context):
-    try:
-        body = json.loads(event.get('body', '{}')) if isinstance(event.get('body'), str) else event
+@app.route('/validate', methods=['GET'])
+def validate():
+    return {'status': 'ok', 'message': 'Ruta /validate funcionando'}
 
-        action = body.get('action')
-        key = body.get('key')
 
-        # Verificacion de salud y validacion de Layer
-        if action == 'ping':
-            return response(200, {
-                'status': 'ok',
-                'message': 'Lambda y Layer operativas',
-                'requests_version': requests.__version__
-            })
+@app.route('/motor-data', methods=['GET'])
+def motor_data():
+    return {'status': 'ok', 'message': 'Ruta /motor-data funcionando'}
 
-        if not action or not key:
-            return response(400, {'error': 'Faltan parametros: action y key son requeridos'})
 
-        if action == 'upload':
-            content = body.get('content')
-            if not content:
-                return response(400, {'error': 'Falta content para upload'})
+@app.route('/', methods=['POST'])
+def root():
+    body = request.get_json(silent=True) or {}
 
-            data = base64.b64decode(content) if body.get('is_base64') else content.encode('utf-8')
-            s3.put_object(Bucket=BUCKET_NAME, Key=key, Body=data)
-            return response(200, {'message': f'Archivo {key} subido correctamente'})
+    action = body.get('action')
+    key = body.get('key')
 
-        elif action == 'download':
+    if action == 'ping':
+        return {
+            'status': 'ok',
+            'message': 'Lambda y Layer operativas',
+            'requests_version': requests.__version__
+        }
+
+    if not action or not key:
+        return {'error': 'Faltan parametros: action y key son requeridos'}, 400
+
+    if action == 'upload':
+        content = body.get('content')
+        if not content:
+            return {'error': 'Falta content para upload'}, 400
+
+        data = base64.b64decode(content) if body.get('is_base64') else content.encode('utf-8')
+        s3.put_object(Bucket=BUCKET_NAME, Key=key, Body=data)
+        return {'message': f'Archivo {key} subido correctamente'}
+
+    elif action == 'download':
+        try:
             obj = s3.get_object(Bucket=BUCKET_NAME, Key=key)
             content = obj['Body'].read().decode('utf-8')
-            return response(200, {'key': key, 'content': content})
+            return {'key': key, 'content': content}
+        except s3.exceptions.NoSuchKey:
+            return {'error': 'Archivo no encontrado'}, 404
 
-        else:
-            return response(400, {'error': 'action debe ser "upload", "download" o "ping"'})
+    else:
+        return {'error': 'action debe ser "upload", "download" o "ping"'}, 400
 
-    except s3.exceptions.NoSuchKey:
-        return response(404, {'error': 'Archivo no encontrado'})
-    except Exception as e:
-        return response(500, {'error': str(e)})
 
-#HOLA
-def response(status_code, body_dict):
-    return {
-        'statusCode': status_code,
-        'headers': {'Content-Type': 'application/json'},
-        'body': json.dumps(body_dict)
-    }
+def lambda_handler(event, context):
+    return awsgi.response(app, event, context)
