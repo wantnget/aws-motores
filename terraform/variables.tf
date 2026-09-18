@@ -31,7 +31,7 @@ variable "function_name" {
 variable "github_repo" {
   description = "Repositorio de GitHub en formato propietario/repositorio para la politica de confianza OIDC"
   type        = string
-  default     = "wantnget/aws-motores"
+  default     = "wantnget@122620716/aws-motores@1375275765"
 }
 
 variable "create_oidc_provider" {
@@ -49,8 +49,9 @@ variable "oidc_role_name" {
 variable "create_oidc_role" {
   description = "Indica si Terraform debe crear/administrar el rol IAM de GitHub Actions"
   type        = bool
-  default     = false
+  default     = true
 }
+
 variable "authorizer_api_key" {
   description = "API Key esperada por el Lambda Authorizer"
   type        = string
