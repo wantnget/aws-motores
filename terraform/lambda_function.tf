@@ -1,7 +1,7 @@
 # Empaquetado del codigo fuente de la funcion Lambda
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambda_function.py"
+  source_file = "${path.module}/../functions/motor_aws/lambda_function.py"
   output_path = "${path.module}/function.zip"
 }
 

@@ -1,7 +1,7 @@
 # Empaquetado del codigo del Authorizer
 data "archive_file" "authorizer_zip" {
   type        = "zip"
-  source_file = "${path.module}/../authorizer_function.py"
+  source_file = "${path.module}/../functions/authorizer/authorizer_function.py"
   output_path = "${path.module}/authorizer.zip"
 }
 
