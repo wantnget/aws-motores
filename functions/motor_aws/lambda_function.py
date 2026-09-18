@@ -5,6 +5,7 @@ import os
 import requests  # Importado desde la Lambda Layer
 from flask import Flask, request
 import awsgi2
+from motor_proceso import procesar
 
 app = Flask(__name__)
 
@@ -20,6 +21,12 @@ def validate():
 @app.route('/motor-data', methods=['GET'])
 def motor_data():
     return {'status': 'ok', 'message': 'Ruta /motor-data funcionando'}
+
+
+@app.route('/motor-proceso', methods=['POST'])
+def motor_proceso():
+    body = request.get_json(silent=True) or {}
+    return procesar(body)
 
 
 @app.route('/', methods=['POST'])

@@ -18,7 +18,7 @@ resource "aws_apigatewayv2_integration" "motor_aws_integration" {
   payload_format_version = "2.0"
 }
 
-# Ruta: GET /validate (sin proteccion)
+# Ruta: GET /validate (protegida con API Key via Lambda Authorizer)
 resource "aws_apigatewayv2_route" "valida_route" {
   api_id             = aws_apigatewayv2_api.motor_aws_api.id
   route_key          = "GET /validate"
@@ -26,10 +26,20 @@ resource "aws_apigatewayv2_route" "valida_route" {
   authorization_type = "CUSTOM"
   authorizer_id      = aws_apigatewayv2_authorizer.api_key_authorizer.id
 }
+
 # Ruta: GET /motor-data (protegida con API Key via Lambda Authorizer)
 resource "aws_apigatewayv2_route" "motor_data_route" {
   api_id             = aws_apigatewayv2_api.motor_aws_api.id
   route_key          = "GET /motor-data"
+  target             = "integrations/${aws_apigatewayv2_integration.motor_aws_integration.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id      = aws_apigatewayv2_authorizer.api_key_authorizer.id
+}
+
+# Ruta: POST /motor-proceso (protegida con API Key via Lambda Authorizer)
+resource "aws_apigatewayv2_route" "motor_proceso_route" {
+  api_id             = aws_apigatewayv2_api.motor_aws_api.id
+  route_key          = "POST /motor-proceso"
   target             = "integrations/${aws_apigatewayv2_integration.motor_aws_integration.id}"
   authorization_type = "CUSTOM"
   authorizer_id      = aws_apigatewayv2_authorizer.api_key_authorizer.id
