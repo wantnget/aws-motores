@@ -49,5 +49,5 @@ variable "oidc_role_name" {
 variable "create_oidc_role" {
   description = "Indica si Terraform debe crear/administrar el rol IAM de GitHub Actions"
   type        = bool
-  default     = true
+  default     = false
 }

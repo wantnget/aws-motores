@@ -1,4 +1,4 @@
-﻿name: Deploy Lambda & Layer CI/CD
+name: Deploy Lambda & Layer CI/CD
 
 on:
   push:
@@ -41,7 +41,6 @@ jobs:
         with:
           role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
 
       - name: 5. Configurar Terraform CLI
         uses: hashicorp/setup-terraform@v3
