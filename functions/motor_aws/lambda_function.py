@@ -4,7 +4,7 @@ import base64
 import os
 import requests  # Importado desde la Lambda Layer
 from flask import Flask, request
-import awsgi
+import awsgi2
 
 app = Flask(__name__)
 
@@ -61,4 +61,4 @@ def root():
 
 
 def lambda_handler(event, context):
-    return awsgi.response(app, event, context)
+    return awsgi2.response(app, event, context)
