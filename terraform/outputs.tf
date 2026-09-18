@@ -27,3 +27,7 @@ output "github_actions_role_arn" {
   description = "ARN del rol asumido por GitHub Actions via OIDC"
   value       = var.create_oidc_role ? aws_iam_role.github_actions[0].arn : "arn:aws:iam::${var.aws_account_id}:role/${var.oidc_role_name}"
 }
+output "lambda_function_url" {
+  description = "URL HTTPS publica para invocar la Lambda directamente"
+  value       = aws_lambda_function_url.motor_aws_url.function_url
+}

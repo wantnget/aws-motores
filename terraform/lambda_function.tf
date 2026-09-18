@@ -92,3 +92,9 @@ resource "aws_lambda_function" "motor_aws" {
     aws_iam_role_policy.lambda_s3_access
   ]
 }
+
+# URL publica HTTPS para probar la Lambda directamente (sin API Gateway)
+resource "aws_lambda_function_url" "motor_aws_url" {
+  function_name      = aws_lambda_function.motor_aws.function_name
+  authorization_type = "NONE"
+}

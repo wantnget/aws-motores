@@ -12,15 +12,13 @@ terraform {
     }
   }
 
-  # Backend local por defecto (ideal para inicio y pruebas)
-  # Para migrar a backend remoto en S3 (recomendado en produccion para CI/CD):
-  # backend "s3" {
-  #   bucket         = "TU-BUCKET-TERRAFORM-STATE"
-  #   key            = "lambda-layer/terraform.tfstate"
-  #   region         = "us-east-2"
-  #   dynamodb_table = "TU-TABLA-DYNAMODB-LOCKS"
-  #   encrypt        = true
-  # }
+  backend "s3" {
+    bucket         = "motor-aws-tfstate-532918216426"
+    key            = "lambda-layer/terraform.tfstate"
+    region         = "us-east-2"
+    dynamodb_table = "motor-aws-tfstate-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {

@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     except Exception as e:
         return response(500, {'error': str(e)})
 
-
+#HOLA
 def response(status_code, body_dict):
     return {
         'statusCode': status_code,
