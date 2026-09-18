@@ -1,35 +1,78 @@
-name: Deploy Lambda
+﻿name: Deploy Lambda & Layer CI/CD
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
-  id-token: write   # requerido para OIDC
-  contents: read
+  id-token: write   # Obligatorio para autenticacion OIDC con AWS
+  contents: read    # Para clonar el repositorio
 
 env:
-  FUNCTION_NAME: motor-aws
-  AWS_REGION: us-east-2
+  AWS_REGION: "us-east-2"
+  ROLE_TO_ASSUME: "arn:aws:iam::532918216426:role/github-actions-motor-aws-deploy"
+  TF_VERSION: "1.8.5"
 
 jobs:
-  deploy:
+  build-and-deploy:
+    name: Build Layer & Deploy Terraform
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout código
+      - name: 1. Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS (OIDC)
+      - name: 2. Compilar dependencias de la Layer en Docker
+        run: |
+          chmod +x layer/build.sh
+          ./layer/build.sh
+
+      - name: 3. Validar existencia del artefacto layer.zip
+        run: |
+          if [ ! -f layer/layer.zip ]; then
+            echo "Error: layer/layer.zip no fue generado correctamente"
+            exit 1
+          fi
+          echo "layer.zip generado exitosamente con tamano: $(ls -lh layer/layer.zip | awk '{print $5}')"
+
+      - name: 4. Autenticar en AWS via OIDC (sin credenciales estaticas)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::532918216426:role/github-actions-motor-aws-deploy
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
-      - name: Empaquetar código
-        run: zip -j function.zip lambda_function.py
+      - name: 5. Configurar Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
-      - name: Desplegar a Lambda
+      - name: 6. Terraform Init
+        run: terraform -chdir=terraform init
+
+      - name: 7. Terraform Plan
+        run: terraform -chdir=terraform plan -no-color
+
+      - name: 8. Terraform Apply
+        run: terraform -chdir=terraform apply -auto-approve -no-color
+
+      - name: 9. Smoke Test de la Lambda y la Layer
         run: |
-          aws lambda update-function-code \
-            --function-name ${{ env.FUNCTION_NAME }} \
-            --zip-file fileb://function.zip
+          echo "Ejecutando invocacion de prueba (ping)..."
+          aws lambda invoke \
+            --function-name motor-aws \
+            --cli-binary-format raw-in-base64-out \
+            --payload '{"action": "ping"}' \
+            response.json
+          
+          echo "Respuesta de la funcion:"
+          cat response.json
+          echo ""
+
+          # Validar que contenga status 200
+          grep -q '"statusCode": 200' response.json || {
+            echo "Smoke test fallo: la respuesta no fue 200"
+            exit 1
+          }

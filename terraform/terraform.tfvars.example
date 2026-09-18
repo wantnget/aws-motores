@@ -1,0 +1,12 @@
+﻿# Configuracion de variables para Terraform
+aws_region       = "us-east-2"
+aws_account_id   = "532918216426"
+environment      = "prod"
+layer_name       = "motor-aws-dependencies-layer"
+function_name    = "motor-aws"
+github_repo      = "wantnget/aws-motores"
+
+# Proveedor OIDC e IAM Role
+create_oidc_provider = false  # Cambiar a true si el OIDC Provider de GitHub aun no existe en tu cuenta
+create_oidc_role     = true   # Cambiar a false si ya tienes creado el rol en IAM
+oidc_role_name       = "github-actions-motor-aws-deploy"

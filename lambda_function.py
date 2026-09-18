@@ -1,7 +1,8 @@
-import json
+﻿import json
 import boto3
 import base64
 import os
+import requests  # Importado desde la Lambda Layer
 
 s3 = boto3.client('s3')
 BUCKET_NAME = os.environ.get('BUCKET_NAME', 'nombre-de-tu-bucket')
@@ -14,8 +15,16 @@ def lambda_handler(event, context):
         action = body.get('action')
         key = body.get('key')
 
+        # Verificacion de salud y validacion de Layer
+        if action == 'ping':
+            return response(200, {
+                'status': 'ok',
+                'message': 'Lambda y Layer operativas',
+                'requests_version': requests.__version__
+            })
+
         if not action or not key:
-            return response(400, {'error': 'Faltan parámetros: action y key son requeridos'})
+            return response(400, {'error': 'Faltan parametros: action y key son requeridos'})
 
         if action == 'upload':
             content = body.get('content')
@@ -32,7 +41,7 @@ def lambda_handler(event, context):
             return response(200, {'key': key, 'content': content})
 
         else:
-            return response(400, {'error': 'action debe ser "upload" o "download"'})
+            return response(400, {'error': 'action debe ser "upload", "download" o "ping"'})
 
     except s3.exceptions.NoSuchKey:
         return response(404, {'error': 'Archivo no encontrado'})
